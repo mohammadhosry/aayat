@@ -1,31 +1,33 @@
 <template>
-    <div dir="rtl">
-        <p class="text-2xl text-right mb-6">اجابات صحيحة: {{ score }}</p>
+    <hgroup>
+        <h4>اجابات صحيحة: {{ score }}</h4>
+        <h5 v-if="bestScore">افضل نتيجة: {{ bestScore }}</h5>
+    </hgroup>
+    <article>
         <div v-if="loading">
-            <span class="inline-block animate-spin w-2 h-2">Q</span>
+            <span aria-busy="true"></span>
         </div>
         <template v-else>
-            <p
-                :style="{ cursor: audio ? 'pointer' : 'progress' }"
-                @click="audioPlayer?.paused ? audioPlayer.play() : audioPlayer?.pause()"
-            >
-                {{ ayahText }}
-            </p>
-            <audio v-if="audio" ref="audioPlayer">
-                <source :src="audio" type="audio/mpeg" />
-            </audio>
-            <!-- <select v-model="surah" class="ml-4 p-3">
-                <option v-for="sur in surahs" :key="sur.number" :value="sur.number">{{ sur.name }}</option>
-            </select> -->
+            <header>
+                <p>
+                    {{ ayahText }}
+                    <span
+                        v-show="audio"
+                        @click="playAudio"
+                        class="play-pause"
+                        :style="{ backgroundPositionX: isPlaying ? '-30px' : 0 }"
+                    ></span>
+                </p>
+                <audio v-if="audio" ref="audioPlayer">
+                    <source :src="audio" type="audio/mpeg" />
+                </audio>
+                <!-- <select v-model="surah" class="ml-4 p-3">
+                    <option v-for="sur in surahs" :key="sur.number" :value="sur.number">{{ sur.name }}</option>
+                </select> -->
+            </header>
             <div class="grid">
                 <button
-                    :class="`${
-                        reveal
-                            ? surah === o.number
-                                ? 'contrast'
-                                : 'secondary'
-                            : ''
-                    } ${
+                    :class="`${reveal ? (surah === o.number ? 'contrast' : 'secondary') : ''} ${
                         reveal && selected === o.number
                             ? surah === o.number
                                 ? 'animate-bounce'
@@ -36,6 +38,7 @@
                     @click="answer(o.number)"
                     v-for="o in options"
                     :key="o.number"
+                    :disabled="reveal"
                 >
                     {{ surahs[o.number].name }}
                 </button>
@@ -43,11 +46,12 @@
         </template>
         <!-- <button class="mt-8 bg-amber-100 border rounded px-2 py-1 text-xl disabled:bg-gray-400" :disabled="loading"
             @click="getRandomAyah">اية جديدة</button> -->
-    </div>
+    </article>
 </template>
 
 <script setup lang="ts">
 import { ref, onMounted } from "vue";
+import { useLocalStorage } from "@vueuse/core";
 import surahs from "./data/surahs.json";
 
 interface Option {
@@ -64,13 +68,18 @@ const reveal = ref(false);
 // const isRight = ref(false)
 const selected = ref<null | number>(null);
 const score = ref(0);
+const bestScore = useLocalStorage("bestScore", 0);
 const audio = ref(null);
 const audioPlayer = ref<HTMLAudioElement | null>(null);
+const isPlaying = ref(false);
 
 // const max = computed(() => surahs[surah.value - 1]?.numberOfAyahs || 286)
 
 const answer = (number: number) => {
     score.value += surah.value === number ? 1 : 0;
+    if (score.value > bestScore.value) {
+        bestScore.value = score.value;
+    }
     selected.value = number;
     reveal.value = true;
 
@@ -103,7 +112,18 @@ const getRandomAyah = async () => {
 const getAudio = async (url) => {
     const { data } = await fetchGet(url);
     audio.value = data.audio;
+    isPlaying.value = false;
     // audioPlayer.play()
+};
+
+const playAudio = () => {
+    if (audioPlayer.value?.paused) {
+        audioPlayer.value.play();
+        isPlaying.value = true;
+    } else {
+        audioPlayer.value?.pause();
+        isPlaying.value = false;
+    }
 };
 
 // const randomInt = (max, fromZero = false) => Math[fromZero ? 'floor' : 'ceil'](Math.random() * max)
@@ -151,4 +171,14 @@ onMounted(() => {
 body {
     width: 100vw;
 } */
+.play-pause {
+    display: inline-block;
+    background-image: url(/play-pause.png);
+    background-size: cover;
+    background-repeat: no-repeat;
+    width: 30px;
+    height: 30px;
+    vertical-align: bottom;
+    margin-right: 10px;
+}
 </style>
