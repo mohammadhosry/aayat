@@ -52,6 +52,7 @@
 <script setup lang="ts">
 import { ref, onMounted } from "vue";
 import { useLocalStorage } from "@vueuse/core";
+import { rand as randomInt } from "@vueuse/shared";
 import surahs from "./data/surahs.json";
 
 interface Option {
@@ -97,8 +98,8 @@ const fetchGet = async (url) => {
 const getRandomAyah = async () => {
     loading.value = true;
     audio.value = null;
-    surah.value = randomInt(114);
-    const ayah: number = randomInt(surahs[surah.value].numberOfAyahs);
+    surah.value = randomInt(1, 114);
+    const ayah: number = randomInt(1, surahs[surah.value].numberOfAyahs);
     let url = `ayah/${surah.value}:${ayah}`;
     const {
         data: { text },
@@ -127,14 +128,14 @@ const playAudio = () => {
 };
 
 // const randomInt = (max, fromZero = false) => Math[fromZero ? 'floor' : 'ceil'](Math.random() * max)
-const randomInt = (max: number, min: number = 1) =>
-    Math.floor(Math.random() * (max - min + 1)) + min;
+// const randomInt = (max: number, min: number = 1) =>
+//     Math.floor(Math.random() * (max - min + 1)) + min;
 
 const getRandomOptions = () => {
     options.value = [
         {
             number: surah.value,
-            order: randomInt(99),
+            order: randomInt(1, 99),
         },
     ];
 
@@ -143,8 +144,8 @@ const getRandomOptions = () => {
 
         do {
             rand = {
-                number: randomInt(114),
-                order: randomInt(99),
+                number: randomInt(1, 114),
+                order: randomInt(1, 99),
             };
         } while (options.value.find((o) => o.number === rand?.number));
 
