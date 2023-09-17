@@ -1,10 +1,4 @@
 <template>
-    <fieldset>
-        <label for="switch">
-            <input type="checkbox" id="switch" name="switch" role="switch" v-model="isDark" />
-            الوضع الليلي
-        </label>
-    </fieldset>
     <hgroup>
         <h4>اجابات صحيحة: {{ score }}</h4>
         <h5 v-if="bestScore">افضل نتيجة: {{ bestScore }}</h5>
@@ -49,11 +43,29 @@
         <!-- <button class="mt-8 bg-amber-100 border rounded px-2 py-1 text-xl disabled:bg-gray-400" :disabled="loading"
             @click="getRandomAyah">اية جديدة</button> -->
     </article>
+    <div class="grid">
+        <div></div>
+        <div v-if="reveal">
+            <button :aria-busy="loading" @click="getRandomAyah">الاية التالية</button>
+            <progress :value="progress" :max="progressMax"></progress>
+        </div>
+        <div></div>
+    </div>
+    <br />
+    <details>
+        <summary>إعدادات</summary>
+        <fieldset>
+            <label for="switch">
+                <input type="checkbox" id="switch" name="switch" role="switch" v-model="isDark" />
+                الوضع الليلي
+            </label>
+        </fieldset>
+    </details>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from "vue";
-import { useLocalStorage, useDark, useMediaControls } from "@vueuse/core";
+import { ref, onMounted, watch } from "vue";
+import { useLocalStorage, useDark, useMediaControls, useInterval } from "@vueuse/core";
 import { rand as randomInt } from "@vueuse/shared";
 import surahs from "./data/surahs.json";
 
@@ -82,9 +94,28 @@ const audioPlayer = ref<HTMLAudioElement | null>(null);
 const { playing: isPlaying } = useMediaControls(audioPlayer, {
     src: audio,
 });
-// const isPlaying = ref(false);
+const progressMax = 30;
+const {
+    counter: progress,
+    resume: resumeProgress,
+    reset: resetProgress,
+    pause: pauseProgress,
+} = useInterval(100, {
+    controls: true,
+    immediate: false,
+    callback(progress) {
+        if (progress >= progressMax) {
+            getRandomAyah();
+        }
+    },
+});
 
 // const max = computed(() => surahs[surah.value - 1]?.numberOfAyahs || 286)
+
+const pauseAndReset = () => {
+    pauseProgress();
+    resetProgress();
+};
 
 const answer = (number: number) => {
     score.value += surah.value === number ? 1 : 0;
@@ -95,10 +126,7 @@ const answer = (number: number) => {
 
     selected.value = number;
     reveal.value = true;
-
-    setTimeout(() => {
-        getRandomAyah();
-    }, 2000);
+    resumeProgress();
 };
 
 const fetchGet = async (url) => {
@@ -109,6 +137,7 @@ const getRandomAyah = async () => {
     loading.value = true;
     audio.value = "";
     reveal.value = false;
+    pauseAndReset();
     surah.value = randomInt(1, 114);
     const ayah: number = randomInt(1, surahs[surah.value].numberOfAyahs);
     let url = `ayah/${surah.value}:${ayah}`;
