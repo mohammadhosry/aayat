@@ -66,6 +66,21 @@
                 جزء عم
             </label>
         </fieldset>
+        <fieldset>
+            <legend>عدد الخيارات</legend>
+            <label>
+                <input type="radio" v-model="optionsNumber" :value="3" />
+                3
+            </label>
+            <label>
+                <input type="radio" v-model="optionsNumber" :value="4" />
+                4
+            </label>
+            <label>
+                <input type="radio" v-model="optionsNumber" :value="5" />
+                5
+            </label>
+        </fieldset>
     </details>
 </template>
 
@@ -96,6 +111,7 @@ const selected = ref<null | number>(null);
 const score = ref(0);
 const bestScore = useLocalStorage("bestScore", 0);
 const juz30 = useLocalStorage("juz30", false);
+const optionsNumber = useLocalStorage("optionsNumber", 4);
 const audio = ref("");
 const audioPlayer = ref<HTMLAudioElement | null>(null);
 const { playing: isPlaying } = useMediaControls(audioPlayer, {
@@ -182,7 +198,7 @@ const getRandomOptions = () => {
         },
     ];
 
-    for (let i = 0; i < 3; i++) {
+    for (let i = 0; i < optionsNumber.value - 1; i++) {
         let rand: Option | null = null;
 
         do {
@@ -201,6 +217,7 @@ const getRandomOptions = () => {
 // }
 
 watch(juz30, getRandomAyah);
+watch(optionsNumber, getRandomAyah);
 
 onMounted(() => {
     // getSurahs()
