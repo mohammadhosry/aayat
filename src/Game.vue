@@ -60,6 +60,12 @@
                 الوضع الليلي
             </label>
         </fieldset>
+        <fieldset>
+            <label for="switch">
+                <input type="checkbox" id="switch" name="switch" role="switch" v-model="juz30" />
+                جزء عم
+            </label>
+        </fieldset>
     </details>
 </template>
 
@@ -89,6 +95,7 @@ const reveal = ref(false);
 const selected = ref<null | number>(null);
 const score = ref(0);
 const bestScore = useLocalStorage("bestScore", 0);
+const juz30 = useLocalStorage("juz30", false);
 const audio = ref("");
 const audioPlayer = ref<HTMLAudioElement | null>(null);
 const { playing: isPlaying } = useMediaControls(audioPlayer, {
@@ -138,7 +145,7 @@ const getRandomAyah = async () => {
     audio.value = "";
     reveal.value = false;
     pauseAndReset();
-    surah.value = randomInt(1, 114);
+    surah.value = randomInt(juz30.value ? 78 : 1, 114);
     const ayah: number = randomInt(1, surahs[surah.value].numberOfAyahs);
     let url = `ayah/${surah.value}:${ayah}`;
     const {
@@ -150,7 +157,7 @@ const getRandomAyah = async () => {
     getRandomOptions();
 };
 
-const getAudio = async (url) => {
+const getAudio = async (url: string) => {
     const { data } = await fetchGet(url);
     audio.value = data.audio;
 };
@@ -180,7 +187,7 @@ const getRandomOptions = () => {
 
         do {
             rand = {
-                number: randomInt(1, 114),
+                number: randomInt(juz30.value ? 78 : 1, 114),
                 order: randomInt(1, 99),
             };
         } while (options.value.find((o) => o.number === rand?.number));
@@ -192,6 +199,8 @@ const getRandomOptions = () => {
 //     const { data } = await fetchGet(`surah`)
 //     surahs.value = data
 // }
+
+watch(juz30, getRandomAyah);
 
 onMounted(() => {
     // getSurahs()
