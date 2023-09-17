@@ -34,18 +34,13 @@
             </header>
             <div class="grid">
                 <button
-                    :class="`${reveal ? (surah === o.number ? 'contrast' : 'secondary') : ''} ${
-                        reveal && selected === o.number
-                            ? surah === o.number
-                                ? 'animate-bounce'
-                                : 'outline'
-                            : ''
+                    :class="`${reveal && surah === o.number ? 'animate-bounce' : 'secondary'} ${
+                        reveal && selected === o.number ? (surah === o.number ? '' : 'outline') : ''
                     }`"
                     :style="{ order: o.order }"
-                    @click="answer(o.number)"
+                    @click="!reveal && answer(o.number)"
                     v-for="o in options"
                     :key="o.number"
-                    :disabled="reveal"
                 >
                     {{ surahs[o.number].name }}
                 </button>
@@ -93,17 +88,17 @@ const { playing: isPlaying } = useMediaControls(audioPlayer, {
 
 const answer = (number: number) => {
     score.value += surah.value === number ? 1 : 0;
+
     if (score.value > bestScore.value) {
         bestScore.value = score.value;
     }
+
     selected.value = number;
     reveal.value = true;
 
     setTimeout(() => {
-        // isRight.value = false
-        reveal.value = false;
         getRandomAyah();
-    }, 3600);
+    }, 2000);
 };
 
 const fetchGet = async (url) => {
@@ -113,6 +108,7 @@ const fetchGet = async (url) => {
 const getRandomAyah = async () => {
     loading.value = true;
     audio.value = "";
+    reveal.value = false;
     surah.value = randomInt(1, 114);
     const ayah: number = randomInt(1, surahs[surah.value].numberOfAyahs);
     let url = `ayah/${surah.value}:${ayah}`;
@@ -176,13 +172,6 @@ onMounted(() => {
 </script>
 
 <style sass>
-/* @tailwind base;
-@tailwind components;
-@tailwind utilities;
-
-body {
-    width: 100vw;
-} */
 .play-pause {
     display: inline-block;
     background-image: url(/play-pause.png);
@@ -192,5 +181,21 @@ body {
     height: 30px;
     vertical-align: bottom;
     margin-right: 10px;
+}
+
+.animate-bounce {
+    animation: bounce 1s infinite;
+}
+
+@keyframes bounce {
+    0%,
+    100% {
+        transform: translateY(-25%);
+        animation-timing-function: cubic-bezier(0.8, 0, 1, 1);
+    }
+    50% {
+        transform: none;
+        animation-timing-function: cubic-bezier(0, 0, 0.2, 1);
+    }
 }
 </style>
