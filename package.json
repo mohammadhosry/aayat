@@ -10,7 +10,6 @@
   "dependencies": {
     "@picocss/pico": "^1.5.10",
     "@vueuse/core": "^10.4.1",
-    "@vueuse/sound": "^2.0.1",
     "vue": "^3.3.4"
   },
   "devDependencies": {
