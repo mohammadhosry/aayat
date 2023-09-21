@@ -60,6 +60,10 @@
                 الوضع الليلي
             </label>
         </fieldset>
+        <label for="selectedAudio">القارئ</label>
+        <select id="selectedAudio" v-model="selectedAudio">
+            <option v-for="(aud, index) in audios" :value="index">{{ aud.name }}</option>
+        </select>
         <blockquote>تغيير اللإعدادات التالية يمحو كل النقاط</blockquote>
         <fieldset>
             <label for="switch">
@@ -90,6 +94,7 @@ import { ref, onMounted, watch } from "vue";
 import { useLocalStorage, useDark, useMediaControls, useInterval } from "@vueuse/core";
 import { rand as randomInt } from "@vueuse/shared";
 import surahs from "./data/surahs.json";
+import audios from "./data/audios.json";
 
 interface Option {
     number: number;
@@ -116,6 +121,7 @@ const juz30 = useLocalStorage("juz30", false);
 const optionsNumber = useLocalStorage("optionsNumber", 4);
 const audio = ref("");
 const audioPlayer = ref<HTMLAudioElement | null>(null);
+const selectedAudio = useLocalStorage("selectedAudio", 0);
 const { playing: isPlaying } = useMediaControls(audioPlayer, {
     src: audio,
 });
@@ -169,7 +175,7 @@ const getRandomAyah = async () => {
     const {
         data: { text },
     } = await fetchGet(url);
-    getAudio(`${url}/ar.abdulsamad`);
+    getAudio(`${url}/${audios[selectedAudio.value].identifier}`);
     loading.value = false;
     ayahText.value = text;
     getRandomOptions();
@@ -225,6 +231,7 @@ const resetAndGet = () => {
 
 watch(juz30, resetAndGet);
 watch(optionsNumber, resetAndGet);
+watch(selectedAudio, getRandomAyah);
 
 onMounted(() => {
     // getSurahs()
