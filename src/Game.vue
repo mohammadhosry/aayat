@@ -1,7 +1,7 @@
 <template>
     <hgroup>
-        <h4>اجابات صحيحة: {{ score }}</h4>
-        <h5 v-if="bestScore">افضل نتيجة: {{ bestScore }}</h5>
+        <h4>اجابات صحيحة: {{ totalScore }}</h4>
+        <!-- <h5 v-if="bestScore">افضل نتيجة: {{ bestScore }}</h5> -->
     </hgroup>
 
     <article>
@@ -28,12 +28,12 @@
             </header>
             <div class="grid">
                 <button
+                    v-for="o in options"
                     :class="`${reveal && surah === o.number ? 'animate-bounce' : 'secondary'} ${
                         reveal && selected === o.number ? (surah === o.number ? '' : 'outline') : ''
                     }`"
                     :style="{ order: o.order }"
                     @click="!reveal && answer(o.number)"
-                    v-for="o in options"
                     :key="o.number"
                 >
                     {{ surahs[o.number].name }}
@@ -60,6 +60,7 @@
                 الوضع الليلي
             </label>
         </fieldset>
+        <blockquote>تغيير اللإعدادات التالية يمحو كل النقاط</blockquote>
         <fieldset>
             <label for="switch">
                 <input type="checkbox" id="switch" name="switch" role="switch" v-model="juz30" />
@@ -108,8 +109,9 @@ const loading = ref(false);
 const reveal = ref(false);
 // const isRight = ref(false)
 const selected = ref<null | number>(null);
-const score = ref(0);
-const bestScore = useLocalStorage("bestScore", 0);
+// const score = ref(0);
+// const bestScore = useLocalStorage("bestScore", 0);
+const totalScore = useLocalStorage("totalScore", 0);
 const juz30 = useLocalStorage("juz30", false);
 const optionsNumber = useLocalStorage("optionsNumber", 4);
 const audio = ref("");
@@ -141,11 +143,11 @@ const pauseAndReset = () => {
 };
 
 const answer = (number: number) => {
-    score.value += surah.value === number ? 1 : 0;
+    surah.value === number && totalScore.value++;
 
-    if (score.value > bestScore.value) {
-        bestScore.value = score.value;
-    }
+    // if (score.value > bestScore.value) {
+    //     bestScore.value = score.value;
+    // }
 
     selected.value = number;
     reveal.value = true;
@@ -216,8 +218,13 @@ const getRandomOptions = () => {
 //     surahs.value = data
 // }
 
-watch(juz30, getRandomAyah);
-watch(optionsNumber, getRandomAyah);
+const resetAndGet = () => {
+    getRandomAyah();
+    totalScore.value = 0;
+};
+
+watch(juz30, resetAndGet);
+watch(optionsNumber, resetAndGet);
 
 onMounted(() => {
     // getSurahs()
